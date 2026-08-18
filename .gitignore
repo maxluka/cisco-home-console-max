@@ -12,3 +12,6 @@ __pycache__/
 # Never commit a real house mapping or real credentials.
 # (the shipped example is named *.example.yaml and does not match)
 cisco-home-console.yaml
+
+# Local-only planning: roadmap, specs, task list. Not for the public repo.
+/planning/
