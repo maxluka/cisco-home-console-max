@@ -2,7 +2,7 @@
 # Reference: https://developers.home-assistant.io/docs/add-ons/configuration/
 
 name: Cisco Home Console Max
-version: "0.1.0"
+version: "0.1.1"
 slug: cisco_home_console_max
 description: >-
   Turn Cisco desk phones into Home Assistant control panels, with live house
@@ -13,6 +13,13 @@ stage: experimental
 arch:
   - amd64
   - aarch64
+
+# The base image (ghcr.io/home-assistant/*-base) carries its own S6-overlay v3
+# init as PID 1. Supervisor's default (init: true) wraps the container in
+# Docker's own init instead, which pushes S6 out of PID 1 and it refuses to
+# start: "s6-overlay-suexec: fatal: can only run as pid 1". Required false
+# whenever the base image supplies its own init — see the developer docs.
+init: false
 
 # Supervisor proxies the Home Assistant REST API at http://supervisor/core/api,
 # so the user never has to create or paste a long-lived access token.
