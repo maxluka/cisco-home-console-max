@@ -1,0 +1,33 @@
+configuration:
+  asterisk_host:
+    name: Asterisk host
+    description: >-
+      Hostname or IP of the Asterisk server whose BLF lamps this add-on
+      drives. Leave empty to run screen panels only, with no lamps.
+  asterisk_ami_port:
+    name: Asterisk AMI port
+    description: The Asterisk Manager Interface port, usually 5038.
+  asterisk_ami_user:
+    name: Asterisk AMI user
+    description: AMI username with permission to run CLI commands.
+  asterisk_ami_password:
+    name: Asterisk AMI password
+    description: The AMI user's secret.
+  bridge_token:
+    name: Bridge token
+    description: >-
+      Optional shared secret. When set, the /bridge endpoints (key presses
+      from the Asterisk dialplan) require it in the X-Bridge-Token header.
+  config_file:
+    name: House file name
+    description: >-
+      Name of the YAML file describing your house (rooms, lamps, favorites),
+      inside this add-on's config directory. See the documentation for the
+      format; the add-on runs with generic menus until the file exists.
+  log_level:
+    name: Log level
+    description: Controls how much the add-on writes to its log.
+network:
+  8000/tcp: >-
+    XML service the phones fetch their menus from. Must be reachable from the
+    phones on your LAN.

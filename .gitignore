@@ -10,5 +10,5 @@ __pycache__/
 .obsidian/
 
 # Never commit a real house mapping or real credentials.
+# (the shipped example is named *.example.yaml and does not match)
 cisco-home-console.yaml
-!cisco_home_console/cisco-home-console.example.yaml

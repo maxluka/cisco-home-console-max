@@ -3,8 +3,9 @@
 Turn Cisco desk phones into Home Assistant control panels — live house status on
 the screen, and on the BLF lamps next to it.
 
-> **Status: not released yet.** This repository is being prepared. It is not
-> installable in its current state.
+> **Status: pre-release.** The add-on builds and runs; it has not yet been
+> tested against physical phones outside the author's setup. Not published to
+> GitHub yet.
 
 ## What it does
 
@@ -27,13 +28,21 @@ setup.
 ## Requirements
 
 - Home Assistant OS or Supervised (add-ons need the Supervisor).
-- An Asterisk server you control, reachable over AMI.
 - One or more Cisco IP phones running **SIP** firmware.
+- For the BLF lamps only: an Asterisk server you control, reachable over AMI.
+  The screen panels work without any Asterisk at all.
 
 ## Supported phones
 
-First release targets the **Cisco 8800 series** (tested on the 8865). Support is
-SIP-only by design — no SCCP, no patched Asterisk.
+First release targets the **Cisco 8800 series** (developed against a CP-8865).
+Support is SIP-only by design — no SCCP.
+
+One honest caveat: the screen panels work against any Asterisk (or none), but
+**BLF lamps on 8800 enterprise firmware need the community
+[usecallmanager patch](https://usecallmanager.nz/)** — stock Asterisk does not
+speak the presence dialect these phones expect on line keys. If your Asterisk
+already carries the patch, lamps work today; a pre-patched Asterisk add-on is
+planned as a separate installable.
 
 Other generations (7900 series and similar) also run SIP firmware and are
 expected to work with a different screen layout, but they are not in the first

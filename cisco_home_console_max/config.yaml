@@ -1,7 +1,5 @@
 # Home Assistant add-on manifest.
 # Reference: https://developers.home-assistant.io/docs/add-ons/configuration/
-#
-# STARTING SKELETON — values marked TODO are placeholders, not decisions.
 
 name: Cisco Home Console Max
 version: "0.1.0"
@@ -43,6 +41,7 @@ options:
   asterisk_ami_port: 5038
   asterisk_ami_user: ""
   asterisk_ami_password: ""
+  bridge_token: ""
   config_file: cisco-home-console.yaml
   log_level: info
 
@@ -51,5 +50,6 @@ schema:
   asterisk_ami_port: port
   asterisk_ami_user: str
   asterisk_ami_password: password
+  bridge_token: str
   config_file: str
   log_level: list(trace|debug|info|warning|error)
