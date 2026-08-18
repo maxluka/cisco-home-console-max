@@ -3,13 +3,13 @@
 #
 # STARTING SKELETON — values marked TODO are placeholders, not decisions.
 
-name: Cisco Home Console
+name: Cisco Home Console Max
 version: "0.1.0"
-slug: cisco_home_console
+slug: cisco_home_console_max
 description: >-
   Turn Cisco desk phones into Home Assistant control panels, with live house
   status on the screen and on the BLF lamps.
-url: https://github.com/maxluka/cisco-home-console
+url: https://github.com/maxluka/cisco-home-console-max
 stage: experimental
 
 arch:

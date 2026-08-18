@@ -1,4 +1,4 @@
-# Cisco Home Console
+# Cisco Home Console Max
 
 Turn Cisco desk phones into Home Assistant control panels — live house status on
 the screen, and on the BLF lamps next to it.
@@ -64,8 +64,7 @@ this.
 
 ## License
 
-Not yet chosen — see the repository owner. Until a license file is added, no
-usage rights are granted.
+[MIT](LICENSE) — use it, change it, ship it. Keep the copyright notice.
 
 ## Acknowledgements
 

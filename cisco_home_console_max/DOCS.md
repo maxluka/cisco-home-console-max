@@ -1,4 +1,4 @@
-# Cisco Home Console
+# Cisco Home Console Max
 
 Turn Cisco desk phones into Home Assistant control panels.
 
@@ -8,7 +8,7 @@ Turn Cisco desk phones into Home Assistant control panels.
 ## Installation
 
 1. Add this repository to the Supervisor add-on store.
-2. Install **Cisco Home Console**.
+2. Install **Cisco Home Console Max**.
 3. Fill in the Asterisk connection settings.
 4. Create the mapping file (see below).
 5. Point your phones at the add-on.
@@ -76,5 +76,5 @@ To be written.
 ## Support
 
 Open an issue on
-[GitHub](https://github.com/maxluka/cisco-home-console/issues). Please include
+[GitHub](https://github.com/maxluka/cisco-home-console-max/issues). Please include
 your phone model, firmware version, and Asterisk version.
