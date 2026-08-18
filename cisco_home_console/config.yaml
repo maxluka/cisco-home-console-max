@@ -1,0 +1,55 @@
+# Home Assistant add-on manifest.
+# Reference: https://developers.home-assistant.io/docs/add-ons/configuration/
+#
+# STARTING SKELETON — values marked TODO are placeholders, not decisions.
+
+name: Cisco Home Console
+version: "0.1.0"
+slug: cisco_home_console
+description: >-
+  Turn Cisco desk phones into Home Assistant control panels, with live house
+  status on the screen and on the BLF lamps.
+url: https://github.com/maxluka/cisco-home-console
+stage: experimental
+
+arch:
+  - amd64
+  - aarch64
+
+# Supervisor proxies the Home Assistant REST API at http://supervisor/core/api,
+# so the user never has to create or paste a long-lived access token.
+homeassistant_api: true
+
+# The phone-to-entity mapping is too complex for the options schema
+# (key families, extension ranges, rooms, scenes). HA's own guidance is to take
+# it as a file. Lives at /config/cisco-home-console.yaml inside the container.
+map:
+  - addon_config:rw
+
+# Phones fetch XML over plain HTTP with no auth and cannot use ingress,
+# so a real LAN-reachable port is required.
+ports:
+  8000/tcp: 8000
+ports_description:
+  8000/tcp: >-
+    XML service the phones fetch their menus from. Must be reachable from the
+    phones on your LAN.
+
+watchdog: "http://[HOST]:[PORT:8000]/health"
+
+# Simple settings: Supervisor renders these as a settings form automatically.
+options:
+  asterisk_host: ""
+  asterisk_ami_port: 5038
+  asterisk_ami_user: ""
+  asterisk_ami_password: ""
+  config_file: cisco-home-console.yaml
+  log_level: info
+
+schema:
+  asterisk_host: str
+  asterisk_ami_port: port
+  asterisk_ami_user: str
+  asterisk_ami_password: password
+  config_file: str
+  log_level: list(trace|debug|info|warning|error)

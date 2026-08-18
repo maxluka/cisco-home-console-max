@@ -1,0 +1,14 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.env
+.gstack/
+.obsidian/
+
+# Never commit a real house mapping or real credentials.
+cisco-home-console.yaml
+!cisco_home_console/cisco-home-console.example.yaml
