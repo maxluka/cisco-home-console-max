@@ -97,9 +97,12 @@ favorites:                    # curated scene list, in display order
 rooms:                        # lamp lit when any light is on; press toggles
   - key: kitchen
     name: Kitchen
-    lights: [light.kitchen_ceiling, light.kitchen_counter]
-    bright: script.kitchen_on   # optional; direct on/off without it
-    dark: script.kitchen_off
+    area: kitchen             # HA area id — membership read live (see below)
+  - key: wardrobe
+    name: Wardrobe
+    lights: [light.wardrobe_1, light.wardrobe_2]   # or an explicit list
+    bright: script.wardrobe_on  # optional; direct on/off without it
+    dark: script.wardrobe_off
 
 watch:                        # read-only lamps
   - key: entrance
@@ -130,6 +133,18 @@ phones:                       # idle-screen push targets
 
 auth_devices: []              # device names allowed on /xml/auth; empty = LAN
 ```
+
+**About rooms and `area`:** naming an area is the better answer for a house
+that grows. Membership comes from Home Assistant's own registry while the
+add-on runs, so adding a bulb to that room in Home Assistant is enough — the
+phone's lamp follows without editing anything here. Lights count whether they
+sit in the area directly or inherit it from their device, which is how most
+bulbs are actually placed. Give both `area` and `lights` and they add up. A
+room needs at least one of the two.
+
+Reading the area registry needs Home Assistant's WebSocket API, which the
+add-on opens only when some room actually names an area. If that read fails,
+the last known membership keeps being used rather than the lamps going dark.
 
 **About `active_helper`:** a scene entity's own state is only the moment it
 was last applied, so it cannot answer "which scene is active *now*". The

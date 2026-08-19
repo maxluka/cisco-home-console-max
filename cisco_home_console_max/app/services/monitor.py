@@ -49,7 +49,13 @@ class HouseStateMonitor:
 
     def _families(self) -> list[_Family]:
         house = self._house
-        room_lights = frozenset(light for room in house.rooms for light in room.lights)
+        # Resolved, not the raw config lists: an area-backed room's membership
+        # lives in Home Assistant's registry, and a light we do not watch here
+        # is a light whose change never reaches the lamp. Families are rebuilt
+        # on every reconnect, so this picks up registry edits without a restart.
+        room_lights = frozenset(
+            light for room in house.rooms for light in self._home.room_lights(room)
+        )
         return [
             _Family(
                 "home_scene",

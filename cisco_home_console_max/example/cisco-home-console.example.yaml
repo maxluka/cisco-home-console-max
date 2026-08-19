@@ -63,20 +63,38 @@ favorites:
 # toggles — `bright`/`dark` scripts when given (they carry your colour
 # temperature and choreography), plain light.turn_on/off otherwise.
 # Lamp name in Asterisk: Custom:home_room_<key>.
+#
+# Name the lights one of two ways:
+#
+#   area:   a Home Assistant area id. Membership is read from HA's own
+#           registry while running, so adding a lamp to that room in Home
+#           Assistant is enough — nothing here needs re-saving. Lights count
+#           whether they sit in the area directly or through their device,
+#           which is how most bulbs are actually placed.
+#   lights: an explicit list, for a group that isn't an area.
+#
+# Give both and they add up, which covers "this room, plus the lamp in the
+# hall outside it". A room needs at least one of the two.
 
 rooms:
+  # Live area membership: the usual choice.
   - key: kitchen
     name: Kitchen
-    lights:
-      - light.kitchen_ceiling
-      - light.kitchen_counter
+    area: kitchen
+  # An area plus one extra light that lives elsewhere.
   - key: office
     name: Office
+    area: office
     lights:
-      - light.office_ceiling
-      - light.office_desk
+      - light.hall_spot_outside_office
     bright: script.office_bright_on
     dark: script.office_all_off
+  # No area, just a list.
+  - key: wardrobe
+    name: Wardrobe
+    lights:
+      - light.wardrobe_spot_1
+      - light.wardrobe_spot_2
 
 # ── Watch ────────────────────────────────────────────────────────────────────
 # Read-only lamps: lit when any listed entity wants attention (a contact reads

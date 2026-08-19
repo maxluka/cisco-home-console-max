@@ -2,7 +2,7 @@
 # Reference: https://developers.home-assistant.io/docs/add-ons/configuration/
 
 name: Cisco Home Console Max
-version: "0.2.0"
+version: "0.3.0"
 slug: cisco_home_console_max
 description: >-
   Turn Cisco desk phones into Home Assistant control panels, with live house

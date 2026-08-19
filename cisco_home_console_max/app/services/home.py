@@ -16,7 +16,8 @@ from typing import Protocol
 
 import httpx
 
-from house import House, watch_is_active
+from house import House, Room, watch_is_active
+from services.registry import AreaLightCache
 from settings import HomeAssistantAccess
 
 
@@ -58,6 +59,7 @@ class HomeAssistantError(RuntimeError):
 
 
 class HomeService(Protocol):
+    def room_lights(self, room: Room) -> tuple[str, ...]: ...
     def list_lights(self) -> list[Light]: ...
     def toggle_light(self, entity_id: str) -> Light: ...
     def list_scenes(self) -> list[Scene]: ...
@@ -87,6 +89,7 @@ class HomeAssistantService:
         access: HomeAssistantAccess,
         house: House,
         client: httpx.Client | None = None,
+        areas: AreaLightCache | None = None,
     ) -> None:
         self._access = access
         self._house = house
@@ -95,6 +98,14 @@ class HomeAssistantService:
             headers={"Authorization": f"Bearer {access.token}"},
             timeout=10.0,
         )
+        # Only built when some room actually names an area, so a house without
+        # one never opens a WebSocket it has no use for.
+        if areas is not None:
+            self._areas: AreaLightCache | None = areas
+        elif any(room.area for room in house.rooms):
+            self._areas = AreaLightCache(access)
+        else:
+            self._areas = None
 
     @property
     def access(self) -> HomeAssistantAccess:
@@ -274,6 +285,24 @@ class HomeAssistantService:
         self._select_helper(favorite.active_helper)
         return True
 
+    def room_lights(self, room: Room) -> tuple[str, ...]:
+        """Every light this room counts, area membership included.
+
+        An area-backed room is resolved against Home Assistant's registry each
+        time rather than frozen at config time, which is the whole point of
+        naming an area: add a lamp to the room in Home Assistant and the phone
+        lamp follows. The explicit list is merged in, not replaced, so a room
+        can be "the area, plus that one lamp in the hall".
+        """
+        lights = list(room.lights)
+        if room.area and self._areas is not None:
+            lights.extend(
+                entity_id
+                for entity_id in self._areas.lights(room.area)
+                if entity_id not in lights
+            )
+        return tuple(lights)
+
     def room_blf_states(self) -> list[BlfState]:
         by_id = self._states_by_id()
         return [
@@ -282,7 +311,7 @@ class HomeAssistantService:
                 "INUSE"
                 if any(
                     isinstance(by_id.get(light), dict) and by_id[light].get("state") == "on"
-                    for light in room.lights
+                    for light in self.room_lights(room)
                 )
                 else "NOT_INUSE",
             )
@@ -290,6 +319,8 @@ class HomeAssistantService:
         ]
 
     def _switch_lights(self, lights: Sequence[str], on: bool) -> None:
+        if not lights:
+            return
         self._request(
             "POST",
             f"/api/services/light/turn_{'on' if on else 'off'}",
@@ -311,12 +342,12 @@ class HomeAssistantService:
             if room.bright is not None:
                 self._turn_on(room.bright)
             else:
-                self._switch_lights(room.lights, on=True)
+                self._switch_lights(self.room_lights(room), on=True)
             return True
         if room.dark is not None:
             self._turn_on(room.dark)
         else:
-            self._switch_lights(room.lights, on=False)
+            self._switch_lights(self.room_lights(room), on=False)
         return False
 
     def watch_blf_states(self) -> list[BlfState]:
@@ -514,6 +545,8 @@ class DemoHomeService:
         self._house = house
         self._lights: dict[str, Light] = {}
         for room in house.rooms:
+            # Only the explicit lights: an area-backed room has no membership
+            # to resolve without a real Home Assistant to ask.
             for entity_id in room.lights:
                 label = entity_id.split(".", 1)[-1].replace("_", " ").title()
                 self._lights.setdefault(entity_id, Light(entity_id, label, False, 0))
@@ -591,6 +624,10 @@ class DemoHomeService:
             return False
         self._active_helper = favorite.active_helper
         return True
+
+    def room_lights(self, room: Room) -> tuple[str, ...]:
+        """Explicit lights only -- see the note in __init__ about areas."""
+        return room.lights
 
     def _room_lights(self, key: str) -> list[Light]:
         room = self._house.room(key)

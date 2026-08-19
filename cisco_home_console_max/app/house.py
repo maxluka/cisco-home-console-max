@@ -72,7 +72,19 @@ class Favorite:
 class Room:
     """One room's lamp on the phones.
 
-    `lights` answers "is anything on in here?", which is what the lamp shows.
+    Which lights count answers "is anything on in here?", which is what the
+    lamp shows.  Name them one of two ways:
+
+    * `area` -- a Home Assistant area id.  Membership is read from HA's own
+      registry at runtime, so adding a lamp to that room in Home Assistant is
+      enough and nothing here needs re-saving.  This is the better answer for
+      a real house, which grows.
+    * `lights` -- an explicit list, for a group that is not an area, or for
+      running without registry access.
+
+    Both may be given: the explicit list is then added to whatever the area
+    contains, which covers "this room, plus the lamp in the hall outside it".
+
     `bright` and `dark` are what a press runs, typically the house's own scene
     scripts rather than raw light commands: those carry the colour temperature
     and choreography that setting brightness directly would throw away.  Leave
@@ -82,7 +94,8 @@ class Room:
 
     key: str
     name: str
-    lights: tuple[str, ...]
+    lights: tuple[str, ...] = ()
+    area: str | None = None
     bright: str | None = None
     dark: str | None = None
 
@@ -282,10 +295,17 @@ def parse_house(data: object) -> House:
     rooms = []
     for index, entry in enumerate(_entries(data, "rooms")):
         context = f"`rooms` entry {index + 1}"
+        area = entry.get("area")
+        if not area and not entry.get("lights"):
+            raise HouseConfigError(
+                f"{context} needs either `area` (a Home Assistant area id, whose"
+                " lights are read live) or `lights` (an explicit list)."
+            )
         rooms.append(Room(
             key=_key(entry.get("key"), f"{context} `key`"),
             name=_text(entry.get("name"), f"{context} `name`"),
-            lights=_entity_list(entry.get("lights"), f"{context} `lights`"),
+            lights=_entity_list(entry["lights"], f"{context} `lights`") if entry.get("lights") else (),
+            area=_text(area, f"{context} `area`") if area else None,
             bright=_text(entry["bright"], f"{context} `bright`") if entry.get("bright") else None,
             dark=_text(entry["dark"], f"{context} `dark`") if entry.get("dark") else None,
         ))
