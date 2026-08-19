@@ -17,6 +17,21 @@ those states show them as BLF lamps.
 No Home Assistant token is needed anywhere — the add-on reaches Home
 Assistant through the Supervisor's API proxy.
 
+### Three pieces, three levels
+
+This add-on is level one and the only required piece. Two optional installs
+add to it:
+
+| # | Install | Adds |
+| --- | --- | --- |
+| **1** | **This add-on** | Phone screens: lights, scenes, favorites, climate dashboard. |
+| **2** | **[Configurator](https://github.com/maxluka/cisco-home-console-max-config)** (HACS integration) | A GUI with entity pickers for the house file below, instead of editing YAML by hand. No runtime behaviour. |
+| **3** | **Patched Asterisk** | BLF lamps: house state on the physical lamps, and keys that act. Needs the usecallmanager patch — see below. |
+
+Nothing auto-appears when you install one of these: Home Assistant provides
+no way for an add-on to pull in an integration. Install each when you want
+what it adds.
+
 ## First start
 
 Install, start, and open `http://<your-ha-host>:8000/xml/home` in a browser.
@@ -41,13 +56,19 @@ is added by the house file below.
 Connection details live in the settings form. Everything that describes
 *your house* lives in a YAML file in Home Assistant's own `config` directory
 (next to `configuration.yaml`, so `/config/cisco-home-console.yaml` on the
-host) — reachable with the File Editor or Studio Code Server add-ons, or by
-a companion picker-based configurator (planned) writing the same file.
+host).
 
-It is a file for two reasons: it is too structured for a settings form, and a
-plain declarative file can be written by tooling — a script, an assistant
-with an MCP server that reads your entity list, or a config-flow integration
-using native pickers — not only by hand.
+**Two ways to write it.** Either edit the file directly — with the File Editor
+or Studio Code Server add-ons, using the commented example below as a
+template — or install the optional
+**[Configurator](https://github.com/maxluka/cisco-home-console-max-config)**
+(level 2 above) and click through entity pickers instead. Both produce the
+same file; the add-on neither knows nor cares which wrote it.
+
+It is a file rather than a settings form for two reasons: it is too structured
+for one, and a plain declarative file can be written by tooling — the
+configurator, a script, or an assistant with an MCP server that reads your
+entity list — not only by hand.
 
 A fully commented example ships in the repository as
 [`example/cisco-home-console.example.yaml`](https://github.com/maxluka/cisco-home-console-max/blob/main/cisco_home_console_max/example/cisco-home-console.example.yaml).
@@ -155,10 +176,17 @@ Lamps update live: the add-on subscribes to Home Assistant's event stream and
 pushes the affected family whenever an entity behind a lamp changes, whoever
 changed it.
 
-**Note on 8800-series BLF:** stock Asterisk does not speak the presence
-dialect the 8800's enterprise firmware expects on line keys; that needs the
-community usecallmanager patch. A patched Asterisk add-on is planned as a
-separate installable; any already-patched Asterisk you run works today.
+**Note on 8800-series BLF (level 3 above):** stock Asterisk does not speak
+the presence dialect the 8800's enterprise firmware expects on line keys — it
+answers in one the phone accepts with a 200 OK and then ignores, so the lamp
+never changes. This needs the community
+[usecallmanager patch](https://usecallmanager.nz/).
+
+Any already-patched Asterisk you run works today: fill in the AMI settings
+above and the endpoints below do the rest. If you don't have one, a
+pre-patched Asterisk add-on is planned as a separate installable — the patch
+has been verified to build and load against Asterisk 22.10.1, packaging it is
+the next piece of work.
 
 ## Troubleshooting
 
