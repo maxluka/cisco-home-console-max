@@ -55,6 +55,20 @@ class AreaLights:
         return self.by_area.get(area_id, ())
 
 
+def _auth_header(token: str) -> dict[str, dict[str, str]]:
+    """The upgrade-request header, under whichever name this websockets has.
+
+    `extra_headers` was renamed to `additional_headers` in websockets 14, and
+    requirements.txt allows both sides of that rename.
+    """
+    import websockets
+
+    name = "additional_headers"
+    if tuple(int(part) for part in websockets.__version__.split(".")[:1]) < (14,):
+        name = "extra_headers"
+    return {name: {"Authorization": f"Bearer {token}"}}
+
+
 def _call(socket, message_id: int, message_type: str) -> list[dict]:
     socket.send(json.dumps({"id": message_id, "type": message_type}))
     while True:
@@ -72,7 +86,15 @@ def _call(socket, message_id: int, message_type: str) -> list[dict]:
 def fetch_area_lights(access: HomeAssistantAccess, domain: str = "light") -> AreaLights:
     """Map every area to the entity ids of one domain inside it."""
     try:
-        with connect(access.websocket_url, open_timeout=TIMEOUT_SECONDS) as socket:
+        with connect(
+            access.websocket_url,
+            open_timeout=TIMEOUT_SECONDS,
+            # Supervisor authenticates the add-on on the HTTP upgrade itself,
+            # before Home Assistant's own in-band `auth` message is ever
+            # reached: without this header the proxy rejects the handshake and
+            # every area-backed room silently resolves to no lights at all.
+            **_auth_header(access.token),
+        ) as socket:
             hello = json.loads(socket.recv())
             if hello.get("type") != "auth_required":
                 raise RegistryError("Home Assistant did not ask for authentication.")
@@ -85,7 +107,12 @@ def fetch_area_lights(access: HomeAssistantAccess, domain: str = "light") -> Are
     except RegistryError:
         raise
     except Exception as exc:  # noqa: BLE001 - transport failures are all equal here
-        raise RegistryError("Could not read the Home Assistant registries.") from exc
+        # Name the cause. The generic message alone sent one debugging session
+        # looking for a permission problem when the handshake was being
+        # refused outright.
+        raise RegistryError(
+            f"Could not read the Home Assistant registries ({type(exc).__name__}: {exc})."
+        ) from exc
 
     device_area = {
         device["id"]: device.get("area_id")
