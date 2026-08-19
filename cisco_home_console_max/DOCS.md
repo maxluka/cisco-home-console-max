@@ -171,19 +171,42 @@ enterprise SIP firmware).
 
 ## BLF lamps
 
-The add-on writes lamp states to Asterisk as `Custom:` device states:
+### What a `key` is, and why you see it everywhere
+
+Every entry in the house file has a `key`. It is the last part of the Asterisk
+device state that carries that entry's lamp, so a room with `key: bathroom`
+becomes `Custom:home_room_bathroom`, and that is the name your dialplan
+subscribes a line key to. The full chain:
+
+```
+light in Home Assistant
+  → add-on
+  → Custom:home_room_bathroom     (device state)
+  → hint in your dialplan
+  → lamp on the phone
+```
+
+**If you are not using BLF lamps, keys do not matter** — pick anything
+readable. They matter in exactly one case: the key and your dialplan have to
+agree, so changing a key later means changing the dialplan too. Renaming the
+entry's `name` is always safe; the key is the identity.
+
+### The five families
+
+The add-on writes lamp states to Asterisk as `Custom:` device states, where
+`KEY` below is that entry's `key`:
 
 | Family | Device state | Press action |
 | --- | --- | --- |
-| Favorites | `Custom:home_scene_<key>` | `POST /bridge/scenes/<key>` |
-| Rooms | `Custom:home_room_<key>` | `POST /bridge/rooms/<key>` |
-| Watch | `Custom:home_watch_<key>` | — (read-only) |
-| Switches | `Custom:home_switch_<key>` | `POST /bridge/switches/<key>` |
-| Flows | `Custom:home_flow_<key>` | `POST /bridge/flows/<key>` |
+| Favorites | `Custom:home_scene_KEY` | `POST /bridge/scenes/KEY` |
+| Rooms | `Custom:home_room_KEY` | `POST /bridge/rooms/KEY` |
+| Watch | `Custom:home_watch_KEY` | — (read-only) |
+| Switches | `Custom:home_switch_KEY` | `POST /bridge/switches/KEY` |
+| Flows | `Custom:home_flow_KEY` | `POST /bridge/flows/KEY` |
 
 In the Asterisk dialplan, expose each state as a hint and subscribe a line
 key to it, and make the extension's press call the matching endpoint with
-curl. `GET /bridge/<family>/status` re-reads and re-pushes a whole family,
+curl. `GET /bridge/FAMILY/status` re-reads and re-pushes a whole family,
 and `GET /bridge/entities?domain=light` lists entity ids so they can be found
 instead of guessed.
 
