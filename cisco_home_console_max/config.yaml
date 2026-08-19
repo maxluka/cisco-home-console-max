@@ -2,7 +2,7 @@
 # Reference: https://developers.home-assistant.io/docs/add-ons/configuration/
 
 name: Cisco Home Console Max
-version: "0.1.1"
+version: "0.2.0"
 slug: cisco_home_console_max
 description: >-
   Turn Cisco desk phones into Home Assistant control panels, with live house
@@ -28,8 +28,18 @@ homeassistant_api: true
 # The phone-to-entity mapping is too complex for the options schema
 # (key families, extension ranges, rooms, scenes). HA's own guidance is to take
 # it as a file. Lives at /config/cisco-home-console.yaml inside the container.
+#
+# Deliberately `config`, not `addon_config` (or its 2026.07+ rename,
+# `app_config`): those map to a folder private to this add-on, invisible to
+# everything else, which is exactly wrong once a companion HA integration
+# needs to read/write the same file to drive its picker-based config UI.
+# `config` maps HA's real config directory in at the same internal /config
+# path, so both sides reach one file. (`addon_config` was the original
+# choice, on HA's own general advice for config too complex for the options
+# schema — right instinct for isolation, wrong once a second component
+# needs the file too.)
 map:
-  - addon_config:rw
+  - config:rw
 
 # Phones fetch XML over plain HTTP with no auth and cannot use ingress,
 # so a real LAN-reachable port is required.

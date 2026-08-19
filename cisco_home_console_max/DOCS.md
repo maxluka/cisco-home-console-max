@@ -39,12 +39,15 @@ is added by the house file below.
 ## The house file
 
 Connection details live in the settings form. Everything that describes
-*your house* lives in a YAML file in the add-on config directory
-(`/addon_configs/<slug>/cisco-home-console.yaml` on the host).
+*your house* lives in a YAML file in Home Assistant's own `config` directory
+(next to `configuration.yaml`, so `/config/cisco-home-console.yaml` on the
+host) — reachable with the File Editor or Studio Code Server add-ons, or by
+a companion picker-based configurator (planned) writing the same file.
 
 It is a file for two reasons: it is too structured for a settings form, and a
-plain declarative file can be written by tooling — a script, or an assistant
-with an MCP server that reads your entity list — not only by hand.
+plain declarative file can be written by tooling — a script, an assistant
+with an MCP server that reads your entity list, or a config-flow integration
+using native pickers — not only by hand.
 
 A fully commented example ships in the repository as
 [`example/cisco-home-console.example.yaml`](https://github.com/maxluka/cisco-home-console-max/blob/main/cisco_home_console_max/example/cisco-home-console.example.yaml).
