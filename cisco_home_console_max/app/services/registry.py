@@ -39,6 +39,15 @@ CACHE_SECONDS = 120.0
 # (previous cache, or an empty area), hanging is not.
 TIMEOUT_SECONDS = 10.0
 
+# `websockets` defaults to a 1 MiB frame limit and closes the connection with
+# 1009 when a reply is bigger. `config/entity_registry/list` returns every
+# entity in the house in one frame: 2.5 MiB for 3095 entities on the install
+# this was found on, so the read failed there every single time while passing
+# on any small test house. The limit scales with someone's home, which is the
+# worst way for a limit to be wrong -- the people most likely to want rooms
+# resolved from areas are the ones with the most entities.
+MAX_MESSAGE_BYTES = 32 * 1024 * 1024
+
 
 class RegistryError(RuntimeError):
     """A registry read failed; callers fall back to whatever they had."""
@@ -53,20 +62,6 @@ class AreaLights:
 
     def lights(self, area_id: str) -> tuple[str, ...]:
         return self.by_area.get(area_id, ())
-
-
-def _auth_header(token: str) -> dict[str, dict[str, str]]:
-    """The upgrade-request header, under whichever name this websockets has.
-
-    `extra_headers` was renamed to `additional_headers` in websockets 14, and
-    requirements.txt allows both sides of that rename.
-    """
-    import websockets
-
-    name = "additional_headers"
-    if tuple(int(part) for part in websockets.__version__.split(".")[:1]) < (14,):
-        name = "extra_headers"
-    return {name: {"Authorization": f"Bearer {token}"}}
 
 
 def _call(socket, message_id: int, message_type: str) -> list[dict]:
@@ -89,11 +84,7 @@ def fetch_area_lights(access: HomeAssistantAccess, domain: str = "light") -> Are
         with connect(
             access.websocket_url,
             open_timeout=TIMEOUT_SECONDS,
-            # Supervisor authenticates the add-on on the HTTP upgrade itself,
-            # before Home Assistant's own in-band `auth` message is ever
-            # reached: without this header the proxy rejects the handshake and
-            # every area-backed room silently resolves to no lights at all.
-            **_auth_header(access.token),
+            max_size=MAX_MESSAGE_BYTES,
         ) as socket:
             hello = json.loads(socket.recv())
             if hello.get("type") != "auth_required":
